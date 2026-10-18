@@ -4,6 +4,7 @@ import { connectDb } from './src/config/db.js'
 import { authRouter } from './src/routes/authRoute.js'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
+import { projectRouter } from './src/routes/projectRoutes.js'
 
 const app = express()
 
@@ -22,7 +23,7 @@ app.get("/", (req, res)=>{
 })
 
 app.use("/api/auth", authRouter)
-
+app.use("/api/projects", projectRouter)
 connectDb()
 
 app.listen(process.env.PORT, ()=>{
