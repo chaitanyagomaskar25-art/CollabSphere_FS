@@ -36,20 +36,18 @@ export default function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/verify-otp" element={<VerifyOtpPage />} />
                 <Route path="/register" element={<RegisterPage />} />
-                <Route
-        path="/forgot-password"
-        element={<ForgotPasswordPage />}
-      />
+                <Route path="/verify-email" element={<VerifyEmail />} />
 
-      <Route
-        path="/reset-password"
-        element={<ResetPasswordPage />}
-      />
+                <Route
+                  path="/forgot-password"
+                  element={<ForgotPasswordPage />}
+                />
+
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route
                   path="/public/projects/:shareId"
                   element={<PublicProjectPage />}
                 />
-                <Route path="/verify-email" element={<VerifyEmail />} />
                 {/* Protected Workspace Routes */}
                 <Route
                   path="/dashboard"
