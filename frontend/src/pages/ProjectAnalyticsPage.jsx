@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router';
-import api from '../services/api.js';
+import React, { useState, useEffect } from "react";
+import { useOutletContext } from "react-router";
+import api from "../services/api.js";
 import {
   BarChart3,
   FileText,
@@ -15,7 +15,7 @@ import {
   AlertCircle,
   FileCode,
   Tag,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -28,24 +28,27 @@ import {
   PieChart,
   Pie,
   Cell,
-} from 'recharts';
+  LabelList,
+} from "recharts";
 
 export default function ProjectAnalyticsPage() {
   const { project } = useOutletContext();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
       const res = await api.get(`/projects/${project._id}/analytics`);
       if (res.data.success) {
         setData(res.data);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load project analytics');
+      setError(
+        err.response?.data?.message || "Failed to load project analytics",
+      );
     } finally {
       setLoading(false);
     }
@@ -55,34 +58,34 @@ export default function ProjectAnalyticsPage() {
     fetchAnalytics();
   }, [project._id]);
 
-  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+  const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6"];
 
   const formatActivityMessage = (act) => {
-    const actor = act.user?.name || 'A teammate';
+    const actor = act.user?.name || "A teammate";
     switch (act.action) {
-      case 'project_created':
+      case "project_created":
         return `${actor} created the project workspace`;
-      case 'project_updated':
+      case "project_updated":
         return `${actor} updated project settings`;
-      case 'member_invited':
-        return `${actor} invited ${act.targetName || 'a new member'} (${act.metadata?.role || 'member'})`;
-      case 'member_removed':
+      case "member_invited":
+        return `${actor} invited ${act.targetName || "a new member"} (${act.metadata?.role || "member"})`;
+      case "member_removed":
         return `${actor} removed a member from the project`;
-      case 'member_role_updated':
-        return `${actor} changed member role to ${act.metadata?.newRole || 'member'}`;
-      case 'note_created':
+      case "member_role_updated":
+        return `${actor} changed member role to ${act.metadata?.newRole || "member"}`;
+      case "note_created":
         return `${actor} wrote note "${act.targetName}"`;
-      case 'note_updated':
+      case "note_updated":
         return `${actor} updated note "${act.targetName}"`;
-      case 'note_deleted':
+      case "note_deleted":
         return `${actor} deleted note "${act.targetName}"`;
-      case 'file_uploaded':
+      case "file_uploaded":
         return `${actor} uploaded file "${act.targetName}"`;
-      case 'file_deleted':
+      case "file_deleted":
         return `${actor} deleted file "${act.targetName}"`;
-      case 'project_published':
+      case "project_published":
         return `${actor} enabled public sharing`;
-      case 'project_unpublished':
+      case "project_unpublished":
         return `${actor} disabled public sharing`;
       default:
         return `${actor} performed ${act.action}`;
@@ -101,14 +104,14 @@ export default function ProjectAnalyticsPage() {
   if (error || !data) {
     return (
       <div className="p-6 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-sm">
-        {error || 'Unable to display analytics'}
+        {error || "Unable to display analytics"}
       </div>
     );
   }
 
   // Prep pie chart data
   const pieData = (data.filesByCategory || []).map((cat) => ({
-    name: cat._id ? cat._id.toUpperCase() : 'OTHER',
+    name: cat._id ? cat._id.toUpperCase() : "OTHER",
     value: cat.count,
   }));
 
@@ -121,7 +124,8 @@ export default function ProjectAnalyticsPage() {
           Contribution Analytics
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Real-time metrics derived from MongoDB database records and team activities
+          Real-time metrics derived from MongoDB database records and team
+          activities
         </p>
       </div>
 
@@ -187,44 +191,84 @@ export default function ProjectAnalyticsPage() {
       {/* Visual Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recharts BarChart: Member Contributions */}
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-indigo-500" />
-            Member Contributions (Notes & Files)
-          </h2>
-          <p className="text-xs text-slate-400 mb-6">
-            Comparative contributions authored by each team member
-          </p>
+        {/* Member Contributions BarChart */}
+       <div className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+  <h2 className="text-base font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+    <BarChart3 className="w-4 h-4 text-indigo-500" />
+    Project Overview
+  </h2>
 
-          <div className="h-72 w-full">
-            {data.memberContributions.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-xs text-slate-400">
-                No member activity recorded yet.
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.memberContributions} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1e293b',
-                      borderColor: '#334155',
-                      borderRadius: '0.75rem',
-                      color: '#f8fafc',
-                      fontSize: '12px',
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                  <Bar dataKey="notesCount" name="Notes Authored" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="filesCount" name="Files Uploaded" fill="#10b981" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
+  <p className="text-xs text-slate-400 mb-6">
+    Total notes and files in this project
+  </p>
 
+  <div className="h-72 w-full min-w-0">
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart
+        data={[
+          { name: "Notes", count: data.summary.totalNotes },
+          { name: "Files", count: data.summary.totalFiles },
+        ]}
+        margin={{ top: 30, right: 20, left: 0, bottom: 10 }}
+        barCategoryGap="55%"
+      >
+        <CartesianGrid
+          strokeDasharray="3 3"
+          vertical={false}
+          stroke="#94a3b8"
+          opacity={0.2}
+        />
+
+        <XAxis
+          dataKey="name"
+          tick={{ fontSize: 13, fill: "#94a3b8" }}
+          axisLine={false}
+          tickLine={false}
+          tickMargin={12}
+        />
+
+        <YAxis
+          allowDecimals={false}
+          domain={[0, (max) => Math.max(max, 1)]}
+          tick={{ fontSize: 12, fill: "#94a3b8" }}
+          axisLine={false}
+          tickLine={false}
+          width={35}
+        />
+
+        <Tooltip
+          cursor={{ fill: "rgba(148, 163, 184, 0.08)" }}
+          formatter={(value) => [value, "Total"]}
+          contentStyle={{
+            backgroundColor: "#0f172a",
+            border: "1px solid #334155",
+            borderRadius: "12px",
+            color: "#f8fafc",
+            fontSize: "12px",
+          }}
+        />
+
+        <Bar
+          dataKey="count"
+          name="Total"
+          radius={[8, 8, 0, 0]}
+          maxBarSize={75}
+        >
+          <Cell fill="#f59e0b" />
+          <Cell fill="#3b82f6" />
+
+          <LabelList
+            dataKey="count"
+            position="top"
+            fill="#94a3b8"
+            fontSize={14}
+            fontWeight={700}
+          />
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+</div>
         {/* Recharts PieChart: File Categories */}
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
           <h2 className="text-base font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
@@ -239,7 +283,7 @@ export default function ProjectAnalyticsPage() {
             {pieData.length === 0 ? (
               <p className="text-xs text-slate-400">No files uploaded yet.</p>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={256}>
                 <PieChart>
                   <Pie
                     data={pieData}
@@ -251,19 +295,29 @@ export default function ProjectAnalyticsPage() {
                     dataKey="value"
                   >
                     {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
                     ))}
                   </Pie>
                   <Tooltip
+                    cursor={false}
                     contentStyle={{
-                      backgroundColor: '#1e293b',
-                      borderColor: '#334155',
-                      borderRadius: '0.75rem',
-                      color: '#f8fafc',
-                      fontSize: '12px',
+                      backgroundColor: "#0f172a",
+                      border: "1px solid #334155",
+                      borderRadius: "12px",
+                      color: "#f8fafc",
+                      fontSize: "12px",
+                      padding: "10px 14px",
+                    }}
+                    labelStyle={{
+                      color: "#f8fafc",
+                      fontWeight: 600,
+                      marginBottom: "6px",
                     }}
                   />
-                  <Legend wrapperStyle={{ fontSize: '11px' }} />
+                  <Legend wrapperStyle={{ fontSize: "11px" }} />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -282,7 +336,9 @@ export default function ProjectAnalyticsPage() {
         </p>
 
         {data.recentActivities.length === 0 ? (
-          <p className="text-xs text-slate-400 text-center py-6">No activity recorded yet.</p>
+          <p className="text-xs text-slate-400 text-center py-6">
+            No activity recorded yet.
+          </p>
         ) : (
           <div className="space-y-4">
             {data.recentActivities.map((act) => (
@@ -292,9 +348,13 @@ export default function ProjectAnalyticsPage() {
               >
                 <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs uppercase shrink-0 mt-0.5">
                   {act.user?.avatar ? (
-                    <img src={act.user.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                    <img
+                      src={act.user.avatar}
+                      alt=""
+                      className="w-full h-full rounded-full object-cover"
+                    />
                   ) : (
-                    act.user?.name?.charAt(0) || 'U'
+                    act.user?.name?.charAt(0) || "U"
                   )}
                 </div>
 
@@ -314,4 +374,3 @@ export default function ProjectAnalyticsPage() {
     </div>
   );
 }
-

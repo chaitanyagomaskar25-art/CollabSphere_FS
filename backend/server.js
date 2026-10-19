@@ -23,7 +23,9 @@ app.get("/", (req, res)=>{
 })
 
 app.use("/api/auth", authRouter)
+
 app.use("/api/projects", projectRouter)
+
 connectDb()
 
 app.listen(process.env.PORT, ()=>{

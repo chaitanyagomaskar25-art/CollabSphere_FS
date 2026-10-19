@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useOutletContext } from 'react-router';
-import api from '../services/api.js';
-import { useAuth } from '../context/AuthContext.jsx';
-import MarkdownViewer from '../components/MarkdownViewer.jsx';
+import React, { useState, useEffect, useRef } from "react";
+import { useOutletContext } from "react-router";
+import api from "../services/api.js";
+import { useAuth } from "../context/AuthContext.jsx";
+import MarkdownViewer from "../components/MarkdownViewer.jsx";
 import {
   UploadCloud,
   FileText,
@@ -22,7 +22,7 @@ import {
   Check,
   FolderOpen,
   BookOpen,
-} from 'lucide-react';
+} from "lucide-react";
 
 export default function ProjectFilesPage() {
   const { project, userRole } = useOutletContext();
@@ -30,13 +30,12 @@ export default function ProjectFilesPage() {
 
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
   // Uploading state
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
-  const [dragActive, setDragActive] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef(null);
 
   // Preview Modal state
@@ -44,24 +43,29 @@ export default function ProjectFilesPage() {
   const [copiedCode, setCopiedCode] = useState(false);
 
   // Gemini AI modal state
-  const [aiModal, setAiModal] = useState({ open: false, title: '', content: '', loading: false });
+  const [aiModal, setAiModal] = useState({
+    open: false,
+    title: "",
+    content: "",
+    loading: false,
+  });
 
   // Status feedback
-  const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
+  const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
 
   const fetchFiles = async () => {
     try {
       setLoading(true);
       const params = {};
       if (search.trim()) params.search = search.trim();
-      if (categoryFilter !== 'all') params.category = categoryFilter;
+      if (categoryFilter !== "all") params.category = categoryFilter;
 
       const res = await api.get(`/projects/${project._id}/files`, { params });
       if (res.data.success) {
         setFiles(res.data.files);
       }
     } catch (err) {
-      console.error('Error fetching files:', err);
+      console.error("Error fetching files:", err);
     } finally {
       setLoading(false);
     }
@@ -79,52 +83,31 @@ export default function ProjectFilesPage() {
     if (!selectedFile) return;
 
     if (selectedFile.size > 10 * 1024 * 1024) {
-      setUploadError('File size exceeds the 10MB limit');
+      setUploadError("File size exceeds the 10MB limit");
       return;
     }
 
-    setUploadError('');
+    setUploadError("");
     setIsUploading(true);
 
     const formData = new FormData();
-    formData.append('file', selectedFile);
+    formData.append("file", selectedFile);
 
     try {
-      const res = await api.post(`/projects/${project._id}/files`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const res = await api.post(`/projects/${project._id}/files`, formData);
 
       if (res.data.success) {
-        setStatusMessage({ type: 'success', text: `Uploaded ${selectedFile.name} successfully` });
+        setStatusMessage({
+          type: "success",
+          text: `Uploaded ${selectedFile.name} successfully`,
+        });
         fetchFiles();
       }
     } catch (err) {
-      setUploadError(err.response?.data?.message || 'Failed to upload file');
+      setUploadError(err.response?.data?.message || "Failed to upload file");
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  // Drag and drop handlers
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileUpload(e.dataTransfer.files[0]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -135,14 +118,17 @@ export default function ProjectFilesPage() {
     try {
       const res = await api.delete(`/projects/${project._id}/files/${fileId}`);
       if (res.data.success) {
-        setStatusMessage({ type: 'success', text: 'File deleted successfully' });
+        setStatusMessage({
+          type: "success",
+          text: "File deleted successfully",
+        });
         setFiles(files.filter((f) => f._id !== fileId));
         if (previewFile?._id === fileId) setPreviewFile(null);
       }
     } catch (err) {
       setStatusMessage({
-        type: 'error',
-        text: err.response?.data?.message || 'Failed to delete file',
+        type: "error",
+        text: err.response?.data?.message || "Failed to delete file",
       });
     }
   };
@@ -154,56 +140,112 @@ export default function ProjectFilesPage() {
     setAiModal({
       open: true,
       title: `Gemini AI Explanation: ${file.originalName}`,
-      content: '',
+      content: "",
       loading: true,
     });
 
     try {
-      const ext = file.originalName.split('.').pop() || 'javascript';
-      const res = await api.post('/gemini/explain', {
+      const ext = file.originalName.split(".").pop() || "javascript";
+      const res = await api.post("/gemini/explain", {
         text: file.textContent,
-        context: 'code',
+        context: "code",
         language: ext,
       });
 
       if (res.data.success) {
-        setAiModal((prev) => ({ ...prev, content: res.data.result, loading: false }));
+        setAiModal((prev) => ({
+          ...prev,
+          content: res.data.result,
+          loading: false,
+        }));
       }
     } catch (err) {
       setAiModal((prev) => ({
         ...prev,
-        content: `Error: ${err.response?.data?.message || 'Failed to generate code explanation'}`,
+        content: `Error: ${err.response?.data?.message || "Failed to generate code explanation"}`,
         loading: false,
       }));
     }
   };
 
+  // const handleDownloadFile = async (file) => {
+  //   try {
+  //     const response = await api.get(
+  //       `/projects/${project._id}/files/${file._id}/download`,
+  //       { responseType: "blob" },
+  //     );
+
+  //     const contentType = response.headers["content-type"] || "";
+
+  //     if (
+  //       contentType.includes("application/json") ||
+  //       contentType.includes("text/html")
+  //     ) {
+  //       const errorText = await response.data.text();
+  //       let message = "The server did not return a valid file.";
+
+  //       try {
+  //         const errorData = JSON.parse(errorText);
+  //         message = errorData.message || message;
+  //       } catch {
+  //         // Keep the default message.
+  //       }
+
+  //       throw new Error(message);
+  //     }
+
+  //     const blobUrl = URL.createObjectURL(response.data);
+  //     const link = document.createElement("a");
+
+  //     link.href = blobUrl;
+  //     link.download = file.originalName || "download";
+  //     document.body.appendChild(link);
+  //     link.click();
+  //     link.remove();
+
+  //     setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+  //   } catch (error) {
+  //     console.error("Download failed:", error);
+
+  //     setStatusMessage({
+  //       type: "error",
+  //       text: error.message || "Failed to download file.",
+  //     });
+  //   }
+  // };
+
   // Trigger Gemini Generate Docs on Code File
+  
+  
   const handleAiGenerateDocs = async (file) => {
     if (!file.textContent) return;
 
     setAiModal({
       open: true,
       title: `Gemini AI Code Documentation: ${file.originalName}`,
-      content: '',
+      content: "",
       loading: true,
     });
 
     try {
-      const ext = file.originalName.split('.').pop() || 'javascript';
-      const res = await api.post('/gemini/docs', {
+      const ext = file.originalName.split(".").pop() || "javascript";
+      const res = await api.post("/gemini/docs", {
         code: file.textContent,
         language: ext,
         title: file.originalName,
       });
 
       if (res.data.success) {
-        setAiModal((prev) => ({ ...prev, content: res.data.result, loading: false }));
+        setAiModal((prev) => ({
+          ...prev,
+          content: res.data.result,
+          loading: false,
+        }));
       }
     } catch (err) {
       setAiModal((prev) => ({
         ...prev,
-        content: `Error: ${err.response?.data?.message || 'Failed to generate documentation'}`,
+        content: `Error: ${err.response?.data?.message || "Failed to generate documentation"}`,
         loading: false,
       }));
     }
@@ -217,20 +259,20 @@ export default function ProjectFilesPage() {
   };
 
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
   const getCategoryIcon = (category) => {
     switch (category) {
-      case 'image':
+      case "image":
         return <ImageIcon className="w-5 h-5 text-sky-500" />;
-      case 'code':
+      case "code":
         return <FileCode className="w-5 h-5 text-indigo-500" />;
-      case 'document':
+      case "document":
         return <FileText className="w-5 h-5 text-amber-500" />;
       default:
         return <File className="w-5 h-5 text-slate-400" />;
@@ -247,7 +289,8 @@ export default function ProjectFilesPage() {
             File Management & Assets
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Store code files, design assets, and documentation securely with Cloudinary
+            Store code files, design assets, and documentation securely with
+            Cloudinary
           </p>
         </div>
 
@@ -270,37 +313,30 @@ export default function ProjectFilesPage() {
       {statusMessage.text && (
         <div
           className={`p-3 rounded-xl border flex items-center justify-between text-xs font-medium ${
-            statusMessage.type === 'success'
-              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300'
-              : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300'
+            statusMessage.type === "success"
+              ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300"
+              : "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300"
           }`}
         >
           <div className="flex items-center gap-2">
-            {statusMessage.type === 'success' ? (
+            {statusMessage.type === "success" ? (
               <CheckCircle className="w-4 h-4 shrink-0" />
             ) : (
               <AlertCircle className="w-4 h-4 shrink-0" />
             )}
             <span>{statusMessage.text}</span>
           </div>
-          <button onClick={() => setStatusMessage({ type: '', text: '' })}>
+          <button onClick={() => setStatusMessage({ type: "", text: "" })}>
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Drag & Drop Upload Zone */}
+      {/* File Upload Section */}
       <div
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`p-8 text-center rounded-2xl border-2 border-dashed cursor-pointer transition-all ${
-          dragActive
-            ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30'
-            : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-400 dark:hover:border-indigo-500'
-        }`}
+        className="p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-400 dark:hover:border-indigo-500 cursor-pointer transition-all"
       >
         <div className="w-12 h-12 mx-auto rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-3">
           {isUploading ? (
@@ -310,14 +346,16 @@ export default function ProjectFilesPage() {
           )}
         </div>
         <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-          {isUploading ? 'Uploading file...' : 'Click or drag files here to upload'}
+          {isUploading ? "Uploading file..." : "Click here to upload files"}
         </p>
         <p className="text-xs text-slate-400 mt-1">
           Supports Images, Code (.js, .py, .ts, .json), PDF, Text (Max 10MB)
         </p>
 
         {uploadError && (
-          <p className="text-xs text-rose-500 font-medium mt-2">{uploadError}</p>
+          <p className="text-xs text-rose-500 font-medium mt-2">
+            {uploadError}
+          </p>
         )}
       </div>
 
@@ -326,19 +364,19 @@ export default function ProjectFilesPage() {
         {/* Category Filters */}
         <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
           {[
-            { id: 'all', label: 'All Files' },
-            { id: 'code', label: 'Code & Scripts' },
-            { id: 'image', label: 'Images' },
-            { id: 'document', label: 'Documents' },
-            { id: 'other', label: 'Other' },
+            { id: "all", label: "All Files" },
+            { id: "code", label: "Code & Scripts" },
+            { id: "image", label: "Images" },
+            { id: "document", label: "Documents" },
+            { id: "other", label: "Other" },
           ].map((cat) => (
             <button
               key={cat.id}
               onClick={() => setCategoryFilter(cat.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 categoryFilter === cat.id
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
             >
               {cat.label}
@@ -373,7 +411,8 @@ export default function ProjectFilesPage() {
               No files found
             </h3>
             <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-              Upload source code, screenshots, diagrams, or documentation to collaborate with your team.
+              Upload source code, screenshots, diagrams, or documentation to
+              collaborate with your team.
             </p>
           </div>
         ) : (
@@ -392,7 +431,8 @@ export default function ProjectFilesPage() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
                 {files.map((file) => {
                   const isUploader = file.uploader?._id === currentUser?._id;
-                  const canDelete = isUploader || userRole === 'admin' || userRole === 'owner';
+                  const canDelete =
+                    isUploader || userRole === "admin" || userRole === "owner";
 
                   return (
                     <tr
@@ -403,7 +443,9 @@ export default function ProjectFilesPage() {
                         <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0">
                           {getCategoryIcon(file.category)}
                         </div>
-                        <span className="truncate max-w-[220px] sm:max-w-xs">{file.originalName}</span>
+                        <span className="truncate max-w-[220px] sm:max-w-xs">
+                          {file.originalName}
+                        </span>
                       </td>
 
                       <td className="py-3.5 px-4">
@@ -417,7 +459,7 @@ export default function ProjectFilesPage() {
                       </td>
 
                       <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
-                        {file.uploader?.name || 'Teammate'}
+                        {file.uploader?.name || "Teammate"}
                       </td>
 
                       <td className="py-3.5 px-4 text-slate-400">
@@ -426,7 +468,8 @@ export default function ProjectFilesPage() {
 
                       <td className="py-3.5 px-4 text-right space-x-1">
                         {/* Preview button for supported types */}
-                        {(file.category === 'image' || file.category === 'code') && (
+                        {(file.category === "image" ||
+                          file.category === "code") && (
                           <button
                             onClick={() => setPreviewFile(file)}
                             className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
@@ -437,7 +480,7 @@ export default function ProjectFilesPage() {
                         )}
 
                         {/* AI Explain button on Code files */}
-                        {file.category === 'code' && file.textContent && (
+                        {file.category === "code" && file.textContent && (
                           <button
                             onClick={() => handleAiExplainCode(file)}
                             className="p-1.5 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/50 rounded-lg transition-colors"
@@ -448,19 +491,22 @@ export default function ProjectFilesPage() {
                         )}
 
                         {/* Download button */}
-                        <a
-                          href={`/api/projects/${project._id}/files/${file._id}/download`}
-                          download={file.originalName}
-                          className="inline-block p-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+
+                        <button
+                          type="button"
+                          // onClick={() => handleDownloadFile(file)}
+                          className="inline-flex p-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                           title="Download file"
                         >
                           <Download className="w-4 h-4" />
-                        </a>
+                        </button>
 
                         {/* Delete button */}
                         {canDelete && (
                           <button
-                            onClick={() => handleDeleteFile(file._id, file.originalName)}
+                            onClick={() =>
+                              handleDeleteFile(file._id, file.originalName)
+                            }
                             className="p-1.5 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
                             title="Delete file"
                           >
@@ -492,13 +538,14 @@ export default function ProjectFilesPage() {
                     {previewFile.originalName}
                   </h3>
                   <p className="text-xs text-slate-400">
-                    {formatFileSize(previewFile.size)} • Uploaded by {previewFile.uploader?.name}
+                    {formatFileSize(previewFile.size)} • Uploaded by{" "}
+                    {previewFile.uploader?.name}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                {previewFile.category === 'code' && (
+                {previewFile.category === "code" && (
                   <>
                     <button
                       onClick={() => handleAiExplainCode(previewFile)}
@@ -517,20 +564,23 @@ export default function ProjectFilesPage() {
                       className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                       title="Copy code"
                     >
-                      {copiedCode ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                      {copiedCode ? (
+                        <Check className="w-4 h-4 text-emerald-500" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
                     </button>
                   </>
                 )}
 
-                <a
-                  href={`/api/projects/${project._id}/files/${previewFile._id}/download`}
-                  download={previewFile.originalName}
+                <button
+                  type="button"
+                  // onClick={() => handleDownloadFile(previewFile)}
                   className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                   title="Download"
                 >
                   <Download className="w-4 h-4" />
-                </a>
-
+                </button>
                 <button
                   onClick={() => setPreviewFile(null)}
                   className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
@@ -542,7 +592,7 @@ export default function ProjectFilesPage() {
 
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-6">
-              {previewFile.category === 'image' ? (
+              {previewFile.category === "image" ? (
                 <div className="flex items-center justify-center">
                   <img
                     src={previewFile.url}
@@ -550,20 +600,27 @@ export default function ProjectFilesPage() {
                     className="max-h-[60vh] rounded-xl object-contain shadow-sm border border-slate-200 dark:border-slate-800"
                   />
                 </div>
-              ) : previewFile.category === 'code' ? (
+              ) : previewFile.category === "code" ? (
                 <pre className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto leading-relaxed border border-slate-800">
-                  <code>{previewFile.textContent || 'No text content available to display.'}</code>
+                  <code>
+                    {previewFile.textContent ||
+                      "No text content available to display."}
+                  </code>
                 </pre>
               ) : (
                 <div className="py-12 text-center text-slate-400">
                   <File className="w-12 h-12 mx-auto mb-2 text-slate-300" />
-                  <p className="text-sm font-semibold">Preview not available for this file type</p>
-                  <a
-                    href={`/api/projects/${project._id}/files/${previewFile._id}/download`}
-                    className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600"
+                  <p className="text-sm font-semibold">
+                    Preview not available for this file type
+                  </p>
+                  <button
+                    type="button"
+                    // onClick={() => handleDownloadFile(previewFile)}
+                    className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700"
                   >
-                    <Download className="w-4 h-4" /> Download to View
-                  </a>
+                    <Download className="w-4 h-4" />
+                    Download to View
+                  </button>
                 </div>
               )}
             </div>
@@ -583,7 +640,14 @@ export default function ProjectFilesPage() {
                 </h3>
               </div>
               <button
-                onClick={() => setAiModal({ open: false, title: '', content: '', loading: false })}
+                onClick={() =>
+                  setAiModal({
+                    open: false,
+                    title: "",
+                    content: "",
+                    loading: false,
+                  })
+                }
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <X className="w-5 h-5" />
@@ -594,9 +658,12 @@ export default function ProjectFilesPage() {
               {aiModal.loading ? (
                 <div className="py-16 text-center text-slate-500">
                   <Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-600 mb-3" />
-                  <p className="text-sm font-semibold">Gemini AI is analyzing this code...</p>
+                  <p className="text-sm font-semibold">
+                    Gemini AI is analyzing this code...
+                  </p>
                   <p className="text-xs text-slate-400 mt-1">
-                    Inspecting function logic, arguments, complexity, and potential bugs
+                    Inspecting function logic, arguments, complexity, and
+                    potential bugs
                   </p>
                 </div>
               ) : (
@@ -611,4 +678,3 @@ export default function ProjectFilesPage() {
     </div>
   );
 }
-
