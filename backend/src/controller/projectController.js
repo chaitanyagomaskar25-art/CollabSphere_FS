@@ -1,3 +1,4 @@
+import Analytics from "../model/analyticsModel.js";
 import Project from "../model/projectModel.js";
 import { User } from "../model/userModel.js";
 
@@ -75,6 +76,14 @@ export const createProject = async (req, res) => {
       ],
     });
 
+     await Analytics.create({
+      project: project._id,
+      user: req.user._id,
+      action: 'project_created',
+      targetName: project.name,
+      targetId: project._id,
+    });
+
     const populatedProject = await Project.findById(project._id)
       .populate("owner", "name email avatar")
       .populate("members.user", "name email avatar");
@@ -136,7 +145,7 @@ export const deleteProject = async (req, res) => {
       });
     }
 
-    // await Activity.deleteMany({ project: projectId });
+    await Analytics.deleteMany({ project: projectId });
 
     return res.status(200).json({
       success: true,
@@ -155,23 +164,40 @@ export const deleteProject = async (req, res) => {
 export const updateProject = async (req, res) => {
   try {
     const { name, description, tags } = req.body;
+    const project = req.project;
 
-    const project = await Project.findByIdAndUpdate(
-      { _id: req.params.projectId },
-      { name, description, tags },
-    );
+    if (name) project.name = name.trim();
+    project.description = description.trim(); 
+    project.tags = tags;
+
+    await project.save();
+
+    await Analytics.create({
+      project: project._id,
+      user: req.user._id,
+      action: 'project_updated',
+      targetName: project.name,
+      targetId: project._id,
+    });
+
+    const updated = await Project.findById(project._id)
+      .populate('owner', 'name email avatar')
+      .populate('members.user', 'name email avatar');
+
     return res.status(200).json({
       success: true,
-      message: "Project updated successfully",
-      project: project,
+      message: 'Project updated successfully',
+      project: updated,
+      userRole: req.userRole,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || "Error updating project",
+      message: error.message || 'Error updating project',
     });
   }
 };
+
 
 
 export const inviteMember = async (req, res) => {
@@ -234,6 +260,14 @@ export const inviteMember = async (req, res) => {
 
     await project.save();
 
+    await Analytics.create({
+      project: project._id,
+      user: req.user._id,
+      action: 'member_invited',
+      targetName: userToInvite.name,
+      targetId: userToInvite._id,
+      metadata: { role },
+    });
     const updatedProject = await Project.findById(project._id)
       .populate("owner", "name email avatar")
       .populate("members.user", "name email avatar");
@@ -295,12 +329,12 @@ export const removeMember = async (req, res) => {
 
     await project.save();
 
-    // await Activity.create({
-    //   project: project._id,
-    //   user: req.user._id,
-    //   action: 'member_removed',
-    //   targetId: userId,
-    // });
+    await Analytics.create({
+      project: project._id,
+      user: req.user._id,
+      action: 'member_removed',
+      targetId: userId,
+    });
 
     const updated = await Project.findById(project._id)
       .populate('owner', 'name email avatar')
@@ -355,13 +389,13 @@ export const updateMemberRole = async (req, res) => {
     member.role = role;
     await project.save();
 
-    // await Activity.create({
-    //   project: project._id,
-    //   user: req.user._id,
-    //   action: 'member_role_updated',
-    //   targetId: member.user._id,
-    //   metadata: { newRole: role },
-    // });
+    await Analytics.create({
+      project: project._id,
+      user: req.user._id,
+      action: 'member_role_updated',
+      targetId: member.user._id,
+      metadata: { newRole: role },
+    });
 
     const updated = await Project.findById(project._id)
       .populate('owner', 'name email avatar')
