@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.jsx';
 
 export default function PublicProjectPage() {
   const { shareId } = useParams();
@@ -20,29 +21,52 @@ export default function PublicProjectPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchPublicData = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        const res = await axios.get(`/api/public/projects/${shareId}`);
-        if (res.data.success) {
-          setProject(res.data.project);
-        }
-      } catch (err) {
-        setError(
-          err.response?.data?.message ||
-            'This project is private or does not exist'
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+const { user } = useAuth();
+useEffect(() => {
+  const fetchPublicData = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      setProject(null);
 
-    if (shareId) {
-      fetchPublicData();
+      const res = await fetch(
+        `http://localhost:3000/api/public/projects/${shareId}`
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          data.message || "This project is private or does not exist"
+        );
+      }
+
+      if (data.success && data.project) {
+        setProject(data.project);
+      } else {
+        throw new Error(
+          data.message || "Unable to retrieve public project"
+        );
+      }
+    } catch (err) {
+      console.error("Failed to fetch public project:", err);
+
+      setError(
+        err.message || "This project is private or does not exist"
+      );
+    } finally {
+      setLoading(false);
     }
-  }, [shareId]);
+  };
+
+  if (shareId) {
+    fetchPublicData();
+  } else {
+    setError("Public share ID is missing");
+    setLoading(false);
+  }
+}, [shareId]);
+
 
   if (loading) {
     return (
@@ -98,13 +122,17 @@ export default function PublicProjectPage() {
               <Globe className="w-3.5 h-3.5" />
               Public Showcase
             </span>
-            <Link
-              to="/register"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all"
-            >
-              Sign Up Free
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+           
+{!user && (
+  <Link
+    to="/register"
+    className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all"
+  >
+    Sign Up Free
+    <ArrowRight className="w-3.5 h-3.5" />
+  </Link>
+)}
+
           </div>
         </div>
       </header>

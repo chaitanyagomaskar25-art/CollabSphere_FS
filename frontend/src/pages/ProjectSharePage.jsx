@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useOutletContext, Link } from 'react-router';
-import api from '../services/api.js';
-import MarkdownViewer from '../components/MarkdownViewer.jsx';
+import React, { useState } from "react";
+import { useOutletContext, Link } from "react-router";
+import api from "../services/api.js";
+import MarkdownViewer from "../components/MarkdownViewer.jsx";
 import {
   Share2,
   Globe,
@@ -18,51 +18,54 @@ import {
   FileText,
   Eye,
   Edit3,
-} from 'lucide-react';
+} from "lucide-react";
 
 export default function ProjectSharePage() {
   const { project, userRole, refreshProject } = useOutletContext();
 
   const [isPublic, setIsPublic] = useState(project.isPublic || false);
-  const [shareId, setShareId] = useState(project.publicShareId || '');
+  const [shareId, setShareId] = useState(project.publicShareId || "");
   const [publicReadmeEnabled, setPublicReadmeEnabled] = useState(
-    project.publicReadmeEnabled || false
+    project.publicReadmeEnabled || false,
   );
   const [readmeContent, setReadmeContent] = useState(
     project.publicReadmeContent ||
-      `# ${project.name}\n\n${project.description || 'Project Overview'}\n\n## Tech Stack\n${
-        project.tags?.map((t) => `- ${t}`).join('\n') || '- React\n- Node.js'
-      }`
+      `# ${project.name}\n\n${project.description || "Project Overview"}\n\n## Tech Stack\n${
+        project.tags?.map((t) => `- ${t}`).join("\n") || "- React\n- Node.js"
+      }`,
   );
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedReadme, setCopiedReadme] = useState(false);
-  const [previewTab, setPreviewTab] = useState('write'); // 'write', 'preview'
+  const [previewTab, setPreviewTab] = useState("write"); // 'write', 'preview'
 
   const [isToggling, setIsToggling] = useState(false);
   const [isSavingReadme, setIsSavingReadme] = useState(false);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
+  const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
 
   const publicUrl = shareId
-    ? `${window.location.origin}/public/projects/${shareId}`
-    : '';
+    ? `${window.location.origin}/public/${shareId}`
+    : "";
 
-  const isAdmin = userRole === 'admin' || userRole === 'owner';
+  const isAdmin = userRole === "admin" || userRole === "owner";
 
   // Toggle Public Sharing
   const handleToggleSharing = async () => {
     if (!isAdmin) return;
     setIsToggling(true);
-    setStatusMessage({ type: '', text: '' });
+    setStatusMessage({ type: "", text: "" });
 
     try {
       if (isPublic) {
         // Disable
-        const res = await api.delete(`/projects/${project._id}/share`);
+        const res = await api.patch(`/projects/${project._id}/share`);
         if (res.data.success) {
           setIsPublic(false);
-          setStatusMessage({ type: 'success', text: 'Public sharing disabled' });
+          setStatusMessage({
+            type: "success",
+            text: "Public sharing disabled",
+          });
           refreshProject();
         }
       } else {
@@ -75,16 +78,16 @@ export default function ProjectSharePage() {
           setIsPublic(true);
           setShareId(res.data.publicShareId);
           setStatusMessage({
-            type: 'success',
-            text: 'Public showcase enabled and unique link generated!',
+            type: "success",
+            text: "Public showcase enabled and unique link generated!",
           });
           refreshProject();
         }
       }
     } catch (err) {
       setStatusMessage({
-        type: 'error',
-        text: err.response?.data?.message || 'Error updating sharing state',
+        type: "error",
+        text: err.response?.data?.message || "Error updating sharing state",
       });
     } finally {
       setIsToggling(false);
@@ -95,7 +98,7 @@ export default function ProjectSharePage() {
   const handleSaveReadme = async () => {
     if (!isAdmin) return;
     setIsSavingReadme(true);
-    setStatusMessage({ type: '', text: '' });
+    setStatusMessage({ type: "", text: "" });
 
     try {
       const res = await api.post(`/projects/${project._id}/share`, {
@@ -104,13 +107,16 @@ export default function ProjectSharePage() {
       });
 
       if (res.data.success) {
-        setStatusMessage({ type: 'success', text: 'Public README saved successfully' });
+        setStatusMessage({
+          type: "success",
+          text: "Public README saved successfully",
+        });
         refreshProject();
       }
     } catch (err) {
       setStatusMessage({
-        type: 'error',
-        text: err.response?.data?.message || 'Failed to save README',
+        type: "error",
+        text: err.response?.data?.message || "Failed to save README",
       });
     } finally {
       setIsSavingReadme(false);
@@ -120,38 +126,30 @@ export default function ProjectSharePage() {
   // Generate README with Gemini AI
   const handleGenerateAiReadme = async () => {
     setIsGeneratingAi(true);
-    setStatusMessage({ type: '', text: '' });
+    setStatusMessage({ type: "", text: "" });
 
     try {
-      const res = await api.post('/gemini/readme', {
+      const res = await api.post("/gemini/readme", {
         name: project.name,
         description: project.description,
-        technologies: project.tags,
-        features: [
-          'Full-stack project collaboration and team workspaces',
-          'Rich Markdown notes with instant live preview',
-          'Multi-format file asset storage with Cloudinary',
-          'AI-powered code explanations and documentation',
-          'Interactive contribution analytics with Recharts',
-          'Public read-only showcase links',
-        ],
-        setupRequirements:
-          'Node.js 18+, MongoDB database instance, Cloudinary account, and Google Gemini API key',
+        technologies: project.tags      
       });
 
       if (res.data.success) {
         setReadmeContent(res.data.result);
         setPublicReadmeEnabled(true);
-        setPreviewTab('preview');
+        setPreviewTab("preview");
         setStatusMessage({
-          type: 'success',
-          text: 'AI README generated successfully! Review below and click Save.',
+          type: "success",
+          text: "AI README generated successfully! Review below and click Save.",
         });
       }
     } catch (err) {
       setStatusMessage({
-        type: 'error',
-        text: err.response?.data?.message || 'Failed to generate README with Gemini',
+        type: "error",
+        text:
+          err.response?.data?.message ||
+          "Failed to generate README with Gemini",
       });
     } finally {
       setIsGeneratingAi(false);
@@ -171,10 +169,10 @@ export default function ProjectSharePage() {
   };
 
   const downloadReadmeFile = () => {
-    const element = document.createElement('a');
-    const file = new Blob([readmeContent], { type: 'text/markdown' });
+    const element = document.createElement("a");
+    const file = new Blob([readmeContent], { type: "text/markdown" });
     element.href = URL.createObjectURL(file);
-    element.download = `${project.name.toLowerCase().replace(/\s+/g, '-')}-README.md`;
+    element.download = `${project.name.toLowerCase().replace(/\s+/g, "-")}-README.md`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -189,7 +187,8 @@ export default function ProjectSharePage() {
           Public Sharing & AI README
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Publish read-only project showcases and auto-generate Markdown documentation with Gemini
+          Publish read-only project showcases and auto-generate Markdown
+          documentation with Gemini
         </p>
       </div>
 
@@ -197,12 +196,12 @@ export default function ProjectSharePage() {
       {statusMessage.text && (
         <div
           className={`p-4 rounded-xl border flex items-center gap-3 text-xs sm:text-sm ${
-            statusMessage.type === 'success'
-              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300'
-              : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300'
+            statusMessage.type === "success"
+              ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300"
+              : "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300"
           }`}
         >
-          {statusMessage.type === 'success' ? (
+          {statusMessage.type === "success" ? (
             <CheckCircle2 className="w-5 h-5 shrink-0" />
           ) : (
             <AlertCircle className="w-5 h-5 shrink-0" />
@@ -220,7 +219,10 @@ export default function ProjectSharePage() {
               Public Project Showcase
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
-              When enabled, a unique unguessable public link is generated. Anyone with the link can view your project title, description, tags, and public README without logging in. Private notes, files, and members remain protected.
+              When enabled, a unique unguessable public link is generated.
+              Anyone with the link can view your project title, description,
+              tags, and public README without logging in. Private notes, files,
+              and members remain protected.
             </p>
           </div>
 
@@ -230,16 +232,16 @@ export default function ProjectSharePage() {
               disabled={isToggling}
               className={`px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center gap-2 shadow-sm shrink-0 ${
                 isPublic
-                  ? 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-100'
-                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                  ? "bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-100"
+                  : "bg-indigo-600 hover:bg-indigo-700 text-white"
               }`}
             >
               {isToggling ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : isPublic ? (
-                'Disable Public Access'
+                "Disable Public Access"
               ) : (
-                'Enable Public Sharing'
+                "Enable Public Sharing"
               )}
             </button>
           ) : (
@@ -278,12 +280,13 @@ export default function ProjectSharePage() {
               </button>
 
               <a
-                href={publicUrl}
+                href={publicUrl} 
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1.5 transition-colors"
               >
-                <ExternalLink className="w-3.5 h-3.5" /> View Public Page
+                <ExternalLink className="w-3.5 h-3.5" />
+                View Public Page
               </a>
             </div>
           </div>
@@ -299,7 +302,8 @@ export default function ProjectSharePage() {
               Project README & Documentation
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Generate a professional Markdown README with Google Gemini AI or write your own
+              Generate a professional Markdown README with Google Gemini AI or
+              write your own
             </p>
           </div>
 
@@ -343,22 +347,22 @@ export default function ProjectSharePage() {
             <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
               <button
                 type="button"
-                onClick={() => setPreviewTab('write')}
+                onClick={() => setPreviewTab("write")}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
-                  previewTab === 'write'
-                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400'
+                  previewTab === "write"
+                    ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400"
                 }`}
               >
                 <Edit3 className="w-3.5 h-3.5" /> Editor
               </button>
               <button
                 type="button"
-                onClick={() => setPreviewTab('preview')}
+                onClick={() => setPreviewTab("preview")}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
-                  previewTab === 'preview'
-                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400'
+                  previewTab === "preview"
+                    ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400"
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" /> Preview
@@ -370,7 +374,11 @@ export default function ProjectSharePage() {
               className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
               title="Copy Markdown"
             >
-              {copiedReadme ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+              {copiedReadme ? (
+                <Check className="w-4 h-4 text-emerald-500" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
             </button>
 
             <button
@@ -385,7 +393,7 @@ export default function ProjectSharePage() {
 
         {/* README Editor / Preview Container */}
         <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden min-h-[350px]">
-          {previewTab === 'write' ? (
+          {previewTab === "write" ? (
             <textarea
               rows={16}
               value={readmeContent}
@@ -425,4 +433,3 @@ export default function ProjectSharePage() {
     </div>
   );
 }
-
