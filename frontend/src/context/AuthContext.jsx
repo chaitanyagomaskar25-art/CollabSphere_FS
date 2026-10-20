@@ -75,8 +75,6 @@ const login = async ({ email, password }) => {
       password,
     });
 
-    // The user is NOT fully logged in yet.
-    // The backend has only sent the OTP.
     return {
       success: true,
       requiresOtp: true,
@@ -153,28 +151,47 @@ const login = async ({ email, password }) => {
   };
 
   // Update profile
-  const updateProfile = async (profileData) => {
-    setLoading(true);
-    setAuthError(null);
-    try {
-      const res = await api.put("/auth/profile", profileData);
-      if (res.data.success && res.data.user) {
-        setUser(res.data.user);
-        return {
-          success: true,
-          user: res.data.user,
-          message: res.data.message,
-        };
-      }
-      return { success: false, error: "Unexpected response" };
-    } catch (err) {
-      const msg = err.response?.data?.message || "Failed to update profile";
-      setAuthError(msg);
-      return { success: false, error: msg };
-    } finally {
-      setLoading(false);
+  
+
+const updateProfile = async (profileData) => {
+  setLoading(true);
+  setAuthError(null);
+
+  try {
+    const res = await api.put("/auth/profile", profileData);
+
+    if (res.data.success && res.data.user) {
+      setUser(res.data.user);
+
+      return {
+        success: true,
+        user: res.data.user,
+        message: res.data.message,
+      };
     }
-  };
+
+    const msg = res.data.message || "Failed to update profile";
+
+    setAuthError(msg);
+    return { success: false, error: msg };
+  } catch (err) {
+    const msg =
+      err.response?.data?.message ||
+      "Failed to update profile";
+
+    setAuthError(msg);
+    console.error("Profile update failed:", msg);
+
+    return {
+      success: false,
+      error: msg,
+    };
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   return (
     <AuthContext.Provider
