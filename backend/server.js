@@ -5,6 +5,8 @@ import { authRouter } from './src/routes/authRoute.js'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import { projectRouter } from './src/routes/projectRoutes.js'
+import { geminiRouter } from './src/routes/geminiRoute.js'
+import { publicRouter } from './src/routes/publicRoute.js'
 
 const app = express()
 
@@ -23,8 +25,11 @@ app.get("/", (req, res)=>{
 })
 
 app.use("/api/auth", authRouter)
-
 app.use("/api/projects", projectRouter)
+app.use('/api/public', publicRouter);
+
+app.use("/api/gemini", geminiRouter)
+
 
 connectDb()
 

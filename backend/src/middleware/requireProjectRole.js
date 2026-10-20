@@ -35,6 +35,7 @@ export const requireProjectOwner = async (req, res, next) => {
 
 export const requireProjectAdmin = async (req, res, next) => {
   try {
+    
     const project = await Project.findById(req.params.projectId);
 
     if (!project) {
