@@ -5,6 +5,7 @@ import { requireProjectAdmin, requireProjectMember, requireProjectOwner } from "
 import { noteRoutes } from "./notesRoute.js";
 import { fileRouter } from "./fileRoute.js";
 import { analyticsRoute } from "./analytics.js";
+import { shareRoute } from "./shareRoute.js";
 
 
 export const projectRouter = Router()
@@ -15,6 +16,8 @@ projectRouter.use("/:projectId/files", fileRouter)
 
 
 projectRouter.use('/:projectId/analytics', analyticsRoute);
+
+projectRouter.use('/:projectId/share', shareRoute);
 
 
 projectRouter.get("/",protect, getAllProjects)

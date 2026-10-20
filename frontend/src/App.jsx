@@ -45,7 +45,7 @@ export default function App() {
 
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route
-                  path="/public/projects/:shareId"
+                  path="/public/:shareId"
                   element={<PublicProjectPage />}
                 />
                 {/* Protected Workspace Routes */}
