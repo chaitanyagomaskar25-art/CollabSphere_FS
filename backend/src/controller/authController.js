@@ -434,3 +434,69 @@ await user.save();
   }
 };
 
+
+
+export const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('+password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    const { name, bio, avatar, currentPassword, newPassword } = req.body;
+
+    user.name = name.trim();
+     user.bio = bio.trim();
+    user.avatar = avatar.trim();
+
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password is required to set a new password',
+        });
+      }
+      const isMatch = await bcrypt.compare(currentPassword, user.password)
+
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password is not correct',
+        });
+      }
+      if (newPassword.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'New password must be at least 6 characters long',
+        });
+      }
+      user.password = newPassword;
+    }
+
+    const updatedUser = await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        bio: updatedUser.bio,
+        avatar: updatedUser.avatar,
+        role: updatedUser.role,
+        updatedAt: updatedUser.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.log(error.message)
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error updating profile',
+    });
+  }
+};

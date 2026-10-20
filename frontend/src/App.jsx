@@ -37,14 +37,11 @@ export default function App() {
                 <Route path="/verify-otp" element={<VerifyOtpPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route
-        path="/forgot-password"
-        element={<ForgotPasswordPage />}
-      />
+                  path="/forgot-password"
+                  element={<ForgotPasswordPage />}
+                />
 
-      <Route
-        path="/reset-password"
-        element={<ResetPasswordPage />}
-      />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route
                   path="/public/projects/:shareId"
                   element={<PublicProjectPage />}
