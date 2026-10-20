@@ -449,18 +449,24 @@ export const updateUserProfile = async (req, res) => {
 
     const { name, bio, avatar, currentPassword, newPassword } = req.body;
 
-    user.name = name.trim();
-     user.bio = bio.trim();
-    user.avatar = avatar.trim();
+    if (typeof name === 'string') user.name = name.trim();
+    if (typeof bio === 'string') user.bio = bio.trim();
+    if (typeof avatar === 'string') user.avatar = avatar.trim();
 
-    if (newPassword) {
-      if (!currentPassword) {
+    if (newPassword !== undefined && newPassword !== '') {
+      if (typeof newPassword !== 'string') {
+        return res.status(400).json({
+          success: false,
+          message: 'New password must be a string',
+        });
+      }
+      if (typeof currentPassword !== 'string' || !currentPassword) {
         return res.status(400).json({
           success: false,
           message: 'Current password is required to set a new password',
         });
       }
-      const isMatch = await bcrypt.compare(currentPassword, user.password)
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
 
       if (!isMatch) {
         return res.status(400).json({
@@ -493,7 +499,7 @@ export const updateUserProfile = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error.message)
+    console.error('Profile update error:', error);
     return res.status(500).json({
       success: false,
       message: error.message || 'Server error updating profile',

@@ -174,21 +174,21 @@ const updateProfile = async (profileData) => {
 
     setAuthError(msg);
     return { success: false, error: msg };
-  }catch (err) {
+  } catch (err) {
+    const msg =
+      err.response?.data?.message ||
+      "Failed to update profile";
+
+    setAuthError(msg);
+    console.error("Profile update failed:", msg);
+
+    return {
+      success: false,
+      error: msg,
+    };
+  } finally {
     setLoading(false);
-  const msg =
-    err.response?.data?.message ||
-    "Failed to update profile";
-
-  setAuthError(msg);
-
-  console.error("Profile update failed:", msg);
-
-  return {
-    success: false,
-    error: msg,
-  };
-}
+  }
 };
 
 
