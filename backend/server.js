@@ -40,5 +40,5 @@ app.use("/api/gemini", geminiRouter)
 connectDb()
 
 app.listen(process.env.PORT, ()=>{
-    console.log("Sever is running..!!")
+    console.log(`Sever is running..!!${process.env.PORT}`)
 })

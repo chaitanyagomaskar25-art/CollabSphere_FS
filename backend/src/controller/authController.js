@@ -46,7 +46,7 @@ export const register = async (req, res) => {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
-    const verificationLink = `https://collab-sphere-fs-4qj1.vercel.app/verify-email?token=${token}`;
+    const verificationLink = `http://localhost:5173/verify-email?token=${token}`;
 
     await sendEmail({
       to: user.email,
@@ -174,24 +174,30 @@ export const getme = async (req, res) => {
   try {
     let accessToken = req.cookies?.access_token;
     const refreshToken = req.cookies?.refresh_token;
+const isProduction = process.env.NODE_ENV === "production";
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: false,
+  sameSite:  "lax",
+  path: "/",
+};
 
     let decoded;
 
-    // STEP 1: Try the access token first
+    // STEP 1: Verify the access token
     if (accessToken) {
       try {
         decoded = jwt.verify(
           accessToken,
           process.env.ACCESS_TOKEN
         );
-      } catch (error) {
-        // Missing or expired/invalid access token:
-        // try using the refresh token below.
+      } catch {
         decoded = null;
       }
     }
 
-    // STEP 2: If access token is invalid, use refresh token
+    // STEP 2: If access token is invalid, try refresh token
     if (!decoded) {
       if (!refreshToken) {
         return res.status(401).json({
@@ -207,14 +213,14 @@ export const getme = async (req, res) => {
           refreshToken,
           process.env.REFRESH_TOKEN
         );
-      } catch (error) {
+      } catch {
         return res.status(401).json({
           success: false,
           message: "Refresh token is invalid or expired. Please log in again.",
         });
       }
 
-      // STEP 3: Check the refresh token in the database
+      // STEP 3: Validate the refresh token against the database
       const existingToken = await RefreshToken.findOne({
         token: refreshToken,
         user: refreshDecoded.userId,
@@ -238,10 +244,7 @@ export const getme = async (req, res) => {
       );
 
       res.cookie("access_token", accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "lax",
-        path: "/",
+        ...cookieOptions,
         maxAge: 15 * 60 * 1000,
       });
 
@@ -251,7 +254,7 @@ export const getme = async (req, res) => {
       );
     }
 
-    // STEP 5: Fetch the logged-in user's profile
+    // STEP 5: Fetch the user
     const user = await User.findById(decoded.userId).select(
       "-password"
     );
@@ -263,7 +266,7 @@ export const getme = async (req, res) => {
       });
     }
 
-    // STEP 6: Return the user to React
+    // STEP 6: Return the authenticated user
     return res.status(200).json({
       success: true,
       message: "User found",
@@ -338,9 +341,9 @@ export const forgetPassWord = async (req, res) => {
       token: hashedToken,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     });
-FRONTEND_URL = "https://collab-sphere-fs-4qj1.vercel.app"
+FRONTEND_URL = "http://localhost:5173"
     const resetLink =
-      `${FRONTEND_URL}/reset-password?token=${encodeURIComponent(resetToken)}`;
+      `http://localhost:5173/reset-password?token=${encodeURIComponent(resetToken)}`;
 
     await sendEmail({
       to: user.email,

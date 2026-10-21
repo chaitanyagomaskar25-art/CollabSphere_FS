@@ -168,54 +168,6 @@ export default function ProjectFilesPage() {
     }
   };
 
-  // const handleDownloadFile = async (file) => {
-  //   try {
-  //     const response = await api.get(
-  //       `/projects/${project._id}/files/${file._id}/download`,
-  //       { responseType: "blob" },
-  //     );
-
-  //     const contentType = response.headers["content-type"] || "";
-
-  //     if (
-  //       contentType.includes("application/json") ||
-  //       contentType.includes("text/html")
-  //     ) {
-  //       const errorText = await response.data.text();
-  //       let message = "The server did not return a valid file.";
-
-  //       try {
-  //         const errorData = JSON.parse(errorText);
-  //         message = errorData.message || message;
-  //       } catch {
-  //         // Keep the default message.
-  //       }
-
-  //       throw new Error(message);
-  //     }
-
-  //     const blobUrl = URL.createObjectURL(response.data);
-  //     const link = document.createElement("a");
-
-  //     link.href = blobUrl;
-  //     link.download = file.originalName || "download";
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     link.remove();
-
-  //     setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-  //   } catch (error) {
-  //     console.error("Download failed:", error);
-
-  //     setStatusMessage({
-  //       type: "error",
-  //       text: error.message || "Failed to download file.",
-  //     });
-  //   }
-  // };
-
-  // Trigger Gemini Generate Docs on Code File
-  
   
   const handleAiGenerateDocs = async (file) => {
     if (!file.textContent) return;
