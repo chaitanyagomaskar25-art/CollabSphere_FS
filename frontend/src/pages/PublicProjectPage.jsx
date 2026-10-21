@@ -30,7 +30,7 @@ useEffect(() => {
       setProject(null);
 
       const res = await fetch(
-        `http://localhost:3000/api/public/projects/${shareId}`
+        `https://collab-sphere-fs.vercel.app/api/public/projects/${shareId}`
       );
 
       const data = await res.json();

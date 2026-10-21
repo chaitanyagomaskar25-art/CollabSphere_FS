@@ -13,10 +13,16 @@ const app = express()
 app.use(express.json())
 app.use(cookieParser())
 
+const allowedOrigin = [
+    "http://localhost:5173",
+    "https://collab-sphere-fs-4qj1.vercel.app"
+];
+
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: allowedOrigin,
     credentials: true
-}))
+}));
+
 
 app.get("/", (req, res)=>{
     res.json({

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: 'https://collab-sphere-fs.vercel.app/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

@@ -46,7 +46,7 @@ export const register = async (req, res) => {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
-    const verificationLink = `http://localhost:5173/verify-email?token=${token}`;
+    const verificationLink = `https://collab-sphere-fs-4qj1.vercel.app/verify-email?token=${token}`;
 
     await sendEmail({
       to: user.email,
@@ -338,9 +338,9 @@ export const forgetPassWord = async (req, res) => {
       token: hashedToken,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     });
-
+FRONTEND_URL = "https://collab-sphere-fs-4qj1.vercel.app"
     const resetLink =
-      `${process.env.FRONTEND_URL}/reset-password?token=${encodeURIComponent(resetToken)}`;
+      `${FRONTEND_URL}/reset-password?token=${encodeURIComponent(resetToken)}`;
 
     await sendEmail({
       to: user.email,
