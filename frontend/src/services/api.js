@@ -5,7 +5,7 @@ const apiBaseURL = (
 ).replace(/\/+$/, "");
 
 const api = axios.create({
-  baseURL: apiBaseURL,
+  baseURL: "https://collab-sphere-fs.vercel.app/api",
   withCredentials: true,
 });
 
