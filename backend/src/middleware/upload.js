@@ -42,7 +42,6 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    // Generate safe storage identifier
     const randomId = crypto.randomBytes(16).toString('hex');
     const safeExt = path.extname(file.originalname).toLowerCase().slice(0, 10);
     cb(null, `${Date.now()}-${randomId}${safeExt}`);
