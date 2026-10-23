@@ -23,7 +23,19 @@ app.use(cors({
     credentials: true
 }));
 
+app.use(async (req, res, next) => {
+  try {
+    await connectDb();
+    next();
+  } catch (error) {
+    console.error("Database connection error:", error.message);
 
+    return res.status(503).json({
+      success: false,
+      message: "Database connection failed",
+    });
+  }
+});
 app.get("/", (req, res)=>{
     res.json({
         message: "congratulations!!"
@@ -37,7 +49,6 @@ app.use('/api/public', publicRouter);
 app.use("/api/gemini", geminiRouter)
 
 
-connectDb()
 
 app.listen(process.env.PORT, ()=>{
     console.log(`Sever is running..!!${process.env.PORT}`)
