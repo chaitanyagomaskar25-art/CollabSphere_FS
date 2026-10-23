@@ -1,11 +1,8 @@
 import axios from "axios";
 
-const apiBaseURL = (
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api"
-).replace(/\/+$/, "");
 
 const api = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: "https://collab-sphere-fs.vercel.app/api",
   withCredentials: true,
 });
 
